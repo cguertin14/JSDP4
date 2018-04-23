@@ -1,0 +1,27 @@
+{
+  "name": "SectionFour",
+  "version": "1.0.0",
+  "description": "Section four of the Design Patterns course.",
+  "main": "index.js",
+  "scripts": {
+    "test": "",
+    "start": "babel-node server/server.js"
+  },
+  "author": "Charles Guertin",
+  "license": "ISC",
+  "engines": {
+    "node": "9.11.1"
+  },
+  "dependencies": {
+    "express": "^4.16.3",
+    "jquery": "^3.3.1",
+    "moment": "^2.22.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-register": "^6.26.0"
+  }
+}
