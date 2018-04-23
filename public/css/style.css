@@ -42,6 +42,9 @@ a:hover {color:#EDF7F2;}
 	background:red;
 	position: absolute;
 }
+.inner {
+	position: relative;
+}
 
 .rect {
 	width: 50px;

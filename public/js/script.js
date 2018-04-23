@@ -21,11 +21,29 @@
 		return this.item;
 	};
 
-	Circle.prototype.getID = function() {
+	Circle.prototype.next = function (shp) {
+		if (shp) {
+			this.nextShape = shp;
+		}
+
+		return this.nextShape;
+	};
+
+	Circle.prototype.chainDo = function (action, args, count) {
+		this[action].apply(this, args);
+		
+		if (count && this.nextShape) {
+			setTimeout(binder(this, () =>{
+				this.nextShape.chainDo(action, args, --count);
+			}), 20);
+		}
+	};
+
+	Circle.prototype.getID = function () {
 		return this.id;
 	};
 
-	Circle.prototype.setID = function(id) {
+	Circle.prototype.setID = function (id) {
 		this.id = id;
 	};
 
@@ -35,15 +53,15 @@
 	clone(Circle, Rect);
 
 	function binder(scope, fn) {
-		return function() {
-			return fn.apply(scope,arguments);
+		return function () {
+			return fn.apply(scope, arguments);
 		};
 	}
 
 	function shapeFacade(shp) {
 		return {
-			tint:  binder(shp, shp.tint),
-			move:  binder(shp, shp.move),
+			tint: binder(shp, shp.tint),
+			move: binder(shp, shp.move),
 			getID: binder(shp, shp.getID),
 			setID: binder(shp, shp.setID)
 		};
@@ -51,11 +69,11 @@
 
 	function selfDestructDecorator(obj) {
 
-		obj.item.click(function() {
+		obj.item.click(function () {
 			obj.kill();
 		});
 
-		obj.kill = function() {
+		obj.kill = function () {
 			this.item.remove();
 		};
 	}
@@ -81,9 +99,9 @@
 	BlueCircleBuilder.prototype.init = function () {
 		this.item.tint('blue');
 		let rect = new Rect();
-			rect.tint('yellow');
-			rect.move(40, 40);
-			selfDestructDecorator(rect);
+		rect.tint('yellow');
+		rect.move(40, 40);
+		selfDestructDecorator(rect);
 
 		this.item.get().append(rect.get());
 	};
@@ -104,20 +122,20 @@
 		};
 	}
 
-	
-	function StageAdapter(id){
+
+	function StageAdapter(id) {
 		this.index = 0;
 		this.context = $(id);
 		this.SIG = 'stageItem_';
 	}
 
-	StageAdapter.prototype.add = function (item){
+	StageAdapter.prototype.add = function (item) {
 		++this.index;
 		item.addClass(this.SIG + this.index);
 		this.context.append(item);
 	};
 
-	StageAdapter.prototype.remove = function(index){
+	StageAdapter.prototype.remove = function (index) {
 		this.context.remove('.' + this.SIG + index);
 	}
 
@@ -125,17 +143,17 @@
 		this.a = a;
 	}
 
-	CompositeController.prototype.action = function(act) {
+	CompositeController.prototype.action = function (act) {
 		let args = Array.from(arguments);
-			args.shift();
+		args.shift();
 		for (let item in this.a) {
 			this.a[item][act].apply(this.a[item], args);
 		}
 	};
 
-	const flyWeightFader = function(item) {
+	const flyWeightFader = function (item) {
 		if (item.hasClass('circle')) {
-			item.fadeTo(.5, item.css('opacity')*.5);
+			item.fadeTo(.5, item.css('opacity') * .5);
 		}
 	};
 
@@ -150,7 +168,7 @@
 				_cc = new CompositeController(_aCircle);
 
 			const _position = (circle, left, top) => {
-				circle.move(left,top);
+				circle.move(left, top);
 			};
 
 			const registerShape = (name, cls) => {
@@ -162,15 +180,28 @@
 			};
 
 			const create = (left, top, type) => {
-				var circle = _sf.create(type);
+				var circle = _sf.create(type),
+					index = _aCircle.length - 1;
 				circle.move(left, top);
 				circle.setID(_aCircle.length);
 				_aCircle.push(circle);
+
+				if (index !== -1) {
+					_aCircle[index].next(circle);
+				}
+
 				return shapeFacade(circle);
 			};
 
+			const chainTint = (count) => {
+				let index = Math.max(0, _aCircle.length - count),
+					clr = `#${Math.floor(Math.random() * 255).toString(16) + Math.floor(Math.random() * 255).toString(16) + Math.floor(Math.random() * 255).toString(16)}`;
+
+				_aCircle[index].chainDo('tint', [clr], count);
+			};
+
 			const tint = (clr) => {
-				_cc.action('tint',clr);
+				_cc.action('tint', clr);
 			};
 
 			const move = (left, top) => {
@@ -185,7 +216,7 @@
 				return _aCircle.length;
 			};
 
-			return { index, create, add , register: registerShape, setStage, tint, move };
+			return { index, create, add, register: registerShape, setStage, tint, move, chainTint };
 		};
 
 		return {
@@ -208,7 +239,9 @@
 
 		$('.advert').click(function (e) {
 			let circle = cg.create(e.pageX - 25, e.pageY - 25, 'red');
+
 			cg.add(circle);
+			cg.chainTint(5);
 
 			flyWeightFader($(e.target));
 		});
@@ -220,9 +253,9 @@
 			} else if (e.key === 't') {
 				cg.tint('black');
 			} else if (e.key === 'ArrowRight') {
-				cg.move('+=5px','+=0px');
+				cg.move('+=5px', '+=0px');
 			} else if (e.key === 'ArrowLeft') {
-				cg.move('-=5px','+=0px');
+				cg.move('-=5px', '+=0px');
 			}
 		});
 	});
