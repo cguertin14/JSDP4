@@ -31,9 +31,9 @@
 
 	Circle.prototype.chainDo = function (action, args, count) {
 		this[action].apply(this, args);
-		
+
 		if (count && this.nextShape) {
-			setTimeout(binder(this, () =>{
+			setTimeout(binder(this, () => {
 				this.nextShape.chainDo(action, args, --count);
 			}), 20);
 		}
@@ -77,6 +77,46 @@
 			this.item.remove();
 		};
 	}
+
+	function eventDispatcherDecorator(o) {
+		let list = {};
+		o.addEvent = function (type, listener)  {
+			if (!list[type])  {
+				list[type] = [];
+			}
+
+			if (list[type].indexOf(listener) === -1) {
+				list[type].push(listener);
+			}
+		};
+
+		o.removeEvent = function (type, listener) {
+			let a = list[type];
+			if (a) {
+				let index = a.indexOf(listener);
+				if (index > 1) {
+					a.splice(index, 1);
+				}
+			}
+		};
+
+		o.dispatchEvent = function (e) {
+			let aList = list[e.type];
+			if (aList) {
+				if (!e.target) {
+					e.target = this;
+				}
+				aList.forEach(event => event(e));
+			}
+		};
+	}
+
+	let o = {};
+	eventDispatcherDecorator(o);
+	const fn = () => console.log('its over.');
+	o.addEvent('over', fn);
+	o.removeEvent('over', fn);
+	o.dispatchEvent({type: 'over'});
 
 	function RedCircleBuilder() {
 		this.item = new Circle();
