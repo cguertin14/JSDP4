@@ -270,34 +270,88 @@
 		}
 	})();
 
+	function RedState(obj) {
+		let on  = 'red',
+			off = 'rgba(255,0,0,.25)',
+			_nextState;
+
+
+		this.nextState = function (ns) {
+			_nextState = ns;
+		};
+
+		this.start = function () {
+			obj.tint(on);
+			setTimeout(binder(_nextState, _nextState.start), 1000);
+			setTimeout(() => obj.tint(off), 3000);
+		};
+	}
+
+	function YellowState(obj) {
+		let on  = 'yellow',
+			off = 'rgba(255,255,0,.25)',
+			_nextState;
+
+
+		this.nextState = function (ns) {
+			_nextState = ns;
+		};
+
+		this.start = function () {
+			obj.tint(on);
+			setTimeout(() => {
+				obj.tint(off)
+				_nextState.start();
+			}, 2000);
+		};
+	}
+
+	function GreenState(obj) {
+		let on  = 'green',
+			off = 'rgba(0,255,0,.25)',
+			_nextState;
+
+
+		this.nextState = function (ns) {
+			_nextState = ns;
+		};
+
+		this.start = function () {
+			obj.tint(on);
+			setTimeout(() => {
+				obj.tint(off)
+				_nextState.start();
+			}, 4000);
+		};
+	}
+
 	$(win.document).ready(function () {
 
 		var cg = CircleGeneratorSingleton.getInstance();
-		cg.register('red', RedCircleBuilder);
-		cg.register('blue', BlueCircleBuilder);
+		cg.register('circle', RedCircleBuilder);
 		cg.setStage(new StageAdapter('.advert'));
 
-		$('.advert').click(function (e) {
-			let circle = cg.create(e.pageX - 25, e.pageY - 25, 'red');
+		let red = cg.create(400, 250, 'circle');
+			cg.add(red);
 
-			cg.add(circle);
-			cg.chainTint(5);
+		let yellow = cg.create(400, 325, 'circle');
+			yellow.tint('rgba(255,255,0,.25)');
+			cg.add(yellow);
 
-			flyWeightFader($(e.target));
-		});
+		let green = cg.create(400, 400, 'circle');
+			green.tint('rgba(0,255,0,.25)');
+			cg.add(green);
 
-		$(document).keydown(function (e) {
-			if (e.key === 'a') {
-				var circle = cg.create(Math.floor(Math.random() * 600), Math.floor(Math.random() * 600), "blue");
-				cg.add(circle);
-			} else if (e.key === 't') {
-				cg.tint('black');
-			} else if (e.key === 'ArrowRight') {
-				cg.move('+=5px', '+=0px');
-			} else if (e.key === 'ArrowLeft') {
-				cg.move('-=5px', '+=0px');
-			}
-		});
+		let rs = new RedState(red);
+			gs = new GreenState(green),
+			ys = new YellowState(yellow);
+		
+			rs.nextState(ys);
+			ys.nextState(gs);
+			gs.nextState(rs);
+
+			rs.start();
+
 	});
 
 })(window, $);
